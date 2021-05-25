@@ -187,8 +187,10 @@
                     var user_solve_date = 0;
                     arena[arena_category][arena_id].solves.some(function (arena_solve, index, arry) {
                         if (arena_solve.id == targetid) {
-                            user_solve_date = (new Date(arena_solve.date)).getTime() / 1000;
-                            return true; // some{break}
+                            if (parseInt($("#startTime").val()) <= (new Date(arena_solve.date)).getTime() / 1000) {
+                                user_solve_date = (new Date(arena_solve.date)).getTime() / 1000;
+                                return true; // some{break}
+                            }
                         }
                     });
                     if (user_solve_date === 0) {
