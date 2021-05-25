@@ -18,6 +18,7 @@
                 <input class="form-control me-1" id="name" placeholder="用户名">
                 <input class="form-control ms-1 me-1" id="minSimilarity" placeholder="最小相似度" type="number" min="0" max="100" value="15">
                 <input class="form-control ms-1 me-1" id="minScore" placeholder="最小成绩" type="number" min="0" value="2000">
+                <input class="form-control ms-1 me-1" id="startTime" placeholder="起始时间" type="number" min="1619827200" max="1621958400" value="1619827200">
                 <button class="form-control btn btn-outline-primary ms-1" id="analysis" type="button">寻找相似度</button>
                 <button class="form-control btn btn-outline-primary ms-1" id="search" type="button">画出关系网</button>
             </div>
@@ -126,6 +127,7 @@
     var myChart = echarts.init(dom, null, {renderer: 'svg'});
     var option;
     var user;
+    var user;
     var challenge;
     var arena;
     var finish = 0;
@@ -160,8 +162,10 @@
                     var user_solve_date = 0;
                     challenge[challenge_category][challenge_id].solves.some(function (challenge_solve, index, arry) {
                         if (challenge_solve.id == targetid) {
-                            user_solve_date = (new Date(challenge_solve.date)).getTime() / 1000;
-                            return true; // some{break}
+                            if (parseInt($("#startTime").val()) <= (new Date(challenge_solve.date)).getTime() / 1000) {
+                                user_solve_date = (new Date(challenge_solve.date)).getTime() / 1000;
+                                return true; // some{break}
+                            }
                         }
                     });
                     if (user_solve_date === 0) {
@@ -223,6 +227,7 @@
         $('#about').modal('show');
     });
     $("#analysis").click(function(){
+        $("#startTime").attr("disabled",true);
         var target = $("#name").val();
         Object.keys(user).some(function (id, index, arry) {
             if (user[id].name === target) {
@@ -252,6 +257,7 @@
         });
     });
     $("#search").click(function () {
+        $("#startTime").attr("disabled",true);
         myChart.showLoading();
         var target = $("#name").val();
         var graph = {
@@ -340,4 +346,3 @@
 </script>
 </body>
 </html>
-    
