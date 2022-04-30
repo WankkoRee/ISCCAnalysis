@@ -3,7 +3,7 @@ import re
 import json
 import time
 
-host = '39.96.40.37'
+host = 'https://iscc.isclab.org.cn'
 username = ""
 password = ""
 
@@ -14,10 +14,10 @@ ptnProfile = re.compile(r'<h1 id="team-id">(.*?)</h1>\s+<h3 class="text-center">
 
 
 def updateUserList():
-    id = int(list(userList.keys())[-1]) + 1
+    id = (int(list(userList.keys())[-1]) if len(userList) > 0 else 0) + 1
     err_status = 0
     while True:
-        ret = ss.get(f'http://{host}/team/{id}')
+        ret = ss.get(f'{host}/team/{id}')
         if ret.status_code == 200:
             name, score, ranking = ptnProfile.findall(ret.text)[0]
             if name == '' and score == '':
@@ -35,13 +35,13 @@ def updateUserList():
 
 
 def updateQuestionList(type, valueName):
-    ret = ss.get(f'http://{host}/{type[0]}')
+    ret = ss.get(f'{host}/{type}')
     if ret.status_code == 200:
         ret = ret.json()
         for q in ret['game']:
             if q['category'] not in valueName.keys():
                 valueName[q['category']] = {}
-            retret = ss.get(f'http://{host}/{type[1]}/{q["id"]}')
+            retret = ss.get(f'{host}/{type}/{q["id"]}')
             if retret.status_code == 200:
                 retret = retret.json()
                 valueName[q['category']][q['id']] = {
@@ -63,7 +63,7 @@ def updateQuestionList(type, valueName):
 def updateQuestionsolve(type, valueName):
     for category in valueName.keys():
         for id in valueName[category].keys():
-            ret = ss.get(f'http://{host}/{type}/{id}/solves')
+            ret = ss.get(f'{host}/{type}/{id}/solves')
             if ret.status_code == 200:
                 ret = ret.json()
                 valueName[category][id]['solves'] = ret['teams']
@@ -74,7 +74,7 @@ def updateQuestionsolve(type, valueName):
 
 
 def updateChallengeList():
-    updateQuestionList(['chals', 'chals'], challengeList)
+    updateQuestionList('chals', challengeList)
 
 
 def updateChallengesolve():
@@ -83,7 +83,7 @@ def updateChallengesolve():
 
 
 def updateArenaList():
-    updateQuestionList(['arenas', 'arenas'], arenaList)
+    updateQuestionList('arenas', arenaList)
     pass
 
 
@@ -92,29 +92,34 @@ def updateArenasolve():
     pass
 
 
-if __name__ == '__main__':
-    with open('user.json', 'r', encoding='UTF-8') as f:
-        userList = json.loads(f.read(-1))
+def main():
     for id in userList:
         userList[id]['score'] = 0
     updateUserList()
 
-    ss.post(f'http://{host}/login', data={'name': username, 'password': password})
+    assert ss.post(f'{host}/login', data={'name': username, 'password': password}, allow_redirects=False).status_code == 302
 
-    challengeList = {}
     updateChallengeList()
     updateChallengesolve()
     with open('challenge.json', 'w', encoding='UTF-8') as f:
         f.write(json.dumps(challengeList, ensure_ascii=False))
 
-    arenaList = {}
     updateArenaList()
     updateArenasolve()
     with open('arena.json', 'w', encoding='UTF-8') as f:
-       f.write(json.dumps(arenaList, ensure_ascii=False))
+        f.write(json.dumps(arenaList, ensure_ascii=False))
 
     with open('user.json', 'w', encoding='UTF-8') as f:
-       f.write(json.dumps(userList, ensure_ascii=False))
+        f.write(json.dumps(userList, ensure_ascii=False))
 
     with open('status.json', 'w', encoding='UTF-8') as f:
         f.write(json.dumps({'updateTime': time.time()}, ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    with open('user.json', 'r', encoding='UTF-8') as f:
+        userList = json.loads(f.read(-1))
+    challengeList = {}
+    arenaList = {}
+
+    main()
