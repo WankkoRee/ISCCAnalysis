@@ -51,7 +51,9 @@ def updateQuestionList(type, valueName):
                     'files': retret['files'],
                     'solves': []
                 }
-                print(q['category'], q['id'], retret['name'])
+                if type == "arenas":
+                    valueName[q['category']][q['id']]['author'] = retret['author']
+                # print(q['category'], q['id'], retret['name'])
             else:
                 raise Exception(f'HTTP {retret.status_code}')
             pass
@@ -67,9 +69,15 @@ def updateQuestionsolve(type, valueName):
             if ret.status_code == 200:
                 ret = ret.json()
                 valueName[category][id]['solves'] = ret['teams']
-                for slove in ret['teams']:
+                if type == "are":
+                    for i in valueName[category][id]['solves']:
+                        if i["name"] == valueName[category][id]["author"]:
+                            valueName[category][id]['solves'].remove(i)
+                            print(category, id, "成功排除擂台赛中出题人自动解题造成的误差")
+                            break
+                for slove in valueName[category][id]['solves']:
                     userList[f"{slove['id']}"]['score'] += valueName[category][id]['score']
-                print(category, id, ret['teams'])
+                # print(category, id, valueName[category][id]['solves'])
     pass
 
 
